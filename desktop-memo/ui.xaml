@@ -1,0 +1,832 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Name="MemoWindow"
+        Title="桌面备忘录"
+        Width="340" Height="540"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="False"
+        WindowStartupLocation="Manual"
+        FontFamily="Microsoft YaHei UI"
+        Foreground="#2D2A26"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+    <Window.Resources>
+        <SolidColorBrush x:Key="InkBrush" Color="#2D2A26"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#8C8272"/>
+        <SolidColorBrush x:Key="FaintBrush" Color="#B2A794"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#B46B2D"/>
+        <SolidColorBrush x:Key="ShortBrush" Color="#B46B2D"/>
+        <SolidColorBrush x:Key="LongForeverBrush" Color="#769062"/>
+        <SolidColorBrush x:Key="LongRangeBrush" Color="#5B7C99"/>
+        <!-- Check-in button (round 12): PURE / FLAT single-colour design. The only two
+             colours are the page's OWN shared brush variables, reused directly:
+             pending = AccentBrush (#B46B2D, identical to ShortBrush / PrimaryButtonStyle
+             / logo) and done = LongForeverBrush (#769062, the page green). No tints,
+             no ring, no shadow: the whole disc is exactly one solid colour in every
+             interaction state. -->
+        <SolidColorBrush x:Key="LineBrush" Color="#E9DDCA"/>
+        <SolidColorBrush x:Key="SidebarBrush" Color="#F5EDDF"/>
+
+        <Style x:Key="IconButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Margin" Value="1,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F1E5D2"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E8D8C0"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Margin" Value="1,0,0,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#DC5A47"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#C74A38"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#B46B2D"/>
+            <Setter Property="Foreground" Value="#FFFBF3"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#C17A3B"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#9F5B22"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TypeButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#F5EDDF"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="BorderBrush" Value="#E0D3BD"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FBF3E6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ConfirmButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#B46B2D"/>
+            <Setter Property="Foreground" Value="#FFFBF3"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#C17A3B"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CancelButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#F0E7D6"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E8DDC8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CompleteCircleStyle" TargetType="{x:Type Button}">
+            <!-- Round 12: PURE / FLAT single-colour check-in button.
+                 Round 14: check-in is BIDIRECTIONAL again : both the Pending and
+                 Done states stay clickable, so the user can toggle back and forth
+                 as often as needed. The two Tag states keep their distinct pure
+                 colours, labels and icons, and both keep the Hand cursor. Code sets
+                 Button.Tag = "Pending" / "Done" from Note.Completed.
+                 There is exactly ONE coloured shape: a single solid Ellipse that fills
+                 the whole button. Pending reuses the page's AccentBrush (#B46B2D,
+                 identical to ShortBrush / PrimaryButtonStyle / logo); Done reuses the
+                 page's LongForeverBrush (#769062). No ring, no inset body, no shadow,
+                 no hover/pressed tint: the colour is the SAME pure solid in default,
+                 hover, pressed and focused states, so there is never a leftover tint
+                 or a second colour on the button. Ellipse + Stretch=Fill keeps any
+                 square size a perfect circle; the Viewbox keeps the label fully
+                 visible at any size and in every state (no clipping/overflow). -->
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid>
+                            <!-- The ONLY coloured shape: one solid disc, pure single colour. -->
+                            <Ellipse x:Name="Disc" Stretch="Fill" Fill="{StaticResource AccentBrush}"
+                                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            <!-- Viewbox measures content at natural size and scales it uniformly,
+                                 so the label is never truncated / clipped / overflowing in any
+                                 state (default/hover/pressed/checked) or at any button size. -->
+                            <Viewbox Stretch="Uniform" Margin="9">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}"/>
+                            </Viewbox>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <!-- STATE drives the ONE colour. Base is the page brown; Done
+                                 switches the whole disc to the page green. Both are
+                                 trigger values (never code-set local values), so the
+                                 previous state's colour auto-reverts on every flip.
+                                 No hover / pressed / focused colour setters at all:
+                                 the pure solid colour is identical in every state. -->
+                            <Trigger Property="Tag" Value="Pending">
+                                <Setter TargetName="Disc" Property="Fill" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Done">
+                                <Setter TargetName="Disc" Property="Fill" Value="{StaticResource LongForeverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <!-- Generic disabled fallback: both check-in states stay
+                                     enabled in normal flow (Round 14 bidirectional), so
+                                     this only applies if the button is ever disabled
+                                     elsewhere. It keeps the pure colour and just dims it. -->
+                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NoteItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="3,0,3,3"/>
+            <Setter Property="Padding" Value="8,6,7,6"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="9"
+                                BorderThickness="1" BorderBrush="Transparent"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Rectangle x:Name="Accent" Width="2.5" Height="18" RadiusX="1.25" RadiusY="1.25"
+                                           Fill="{StaticResource AccentBrush}" Opacity="0"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                                           Margin="-5.5,0,0,0"/>
+                                <ContentPresenter/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F9F1E4"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#FFFDF8"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#E8D9C1"/>
+                                <Setter TargetName="Accent" Property="Opacity" Value="1"/>
+                                <Setter Property="Padding" Value="10,6,7,6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NoteListStyle" TargetType="{x:Type ListBox}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="4,0,2,4"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource NoteItemStyle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBox}">
+                        <ScrollViewer Focusable="False" CanContentScroll="True"
+                                      Padding="{TemplateBinding Padding}"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type ScrollBar}">
+            <Setter Property="Width" Value="7"/>
+            <Setter Property="MinWidth" Value="7"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Background="Transparent">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb MinHeight="22">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                                <Border Background="#D8C9B2" CornerRadius="3" Margin="2,2"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EditorTextBoxStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="SelectionBrush" Value="#E6CFAE"/>
+            <Setter Property="SelectionOpacity" Value="0.75"/>
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
+                                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MenuRowStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8"
+                                Padding="9,7,9,7">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F4E9D8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#EBDCC4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="NoteItemTemplate">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="5" Height="5" Fill="{Binding KindBrush}"
+                             Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayTitle}" FontSize="11.4" FontWeight="SemiBold"
+                               Foreground="{StaticResource InkBrush}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="✓" FontSize="9" FontWeight="Bold" Foreground="#769062"
+                               VerticalAlignment="Center" Margin="4,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Completed}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <TextBlock Text="{Binding Preview}" FontSize="9.4" Foreground="{StaticResource MutedBrush}"
+                           Margin="0,2,0,3" TextTrimming="CharacterEllipsis"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding KindShortText}" FontSize="7.8"
+                               Foreground="{Binding KindBrush}"/>
+                    <TextBlock Text=" · " FontSize="7.8" Foreground="{StaticResource FaintBrush}"/>
+                    <TextBlock Text="{Binding TimeShort}" FontSize="8.2" Foreground="{StaticResource FaintBrush}"/>
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid x:Name="Root" Margin="8" Opacity="1">
+        <Grid.RenderTransform>
+            <TranslateTransform x:Name="RootSlide" X="0"/>
+        </Grid.RenderTransform>
+
+        <Border x:Name="CardShadow" Background="#3A2412" CornerRadius="18" Opacity="0.22">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Direction="270" Opacity="0.4" Color="#28190B"/>
+            </Border.Effect>
+        </Border>
+
+        <Border x:Name="CardRoot" CornerRadius="18" BorderThickness="1" BorderBrush="#E4D5BF">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0.6,1">
+                    <GradientStop Color="#FDFAF4" Offset="0"/>
+                    <GradientStop Color="#FAF4E9" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="56"/>
+                    <RowDefinition Height="1"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="13,0,11,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="28" Height="28" CornerRadius="9" Background="#B46B2D">
+                            <TextBlock Text="记" FontFamily="Noto Serif SC" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="#FFF9EF" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Margin="0,-1,0,0"/>
+                        </Border>
+                        <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="桌面备忘录" FontFamily="Noto Serif SC" FontSize="14.2" FontWeight="SemiBold"
+                                       Foreground="{StaticResource InkBrush}"/>
+                            <TextBlock Text="长期 / 短期 · 自动保存" FontSize="8.4" Foreground="{StaticResource MutedBrush}"
+                                       Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="SettingsButton" Style="{StaticResource IconButtonStyle}" Content="&#xE713;"
+                                ToolTip="设置：开机自启动 / 退出" AutomationProperties.Name="设置"/>
+                        <Button x:Name="PinButton" Style="{StaticResource IconButtonStyle}" Content="&#xE718;"
+                                ToolTip="窗口已置顶，点击取消" AutomationProperties.Name="窗口置顶"/>
+                        <Border Width="1" Height="14" Background="#E3D6C2" Margin="3,0,3,0"/>
+                        <Button x:Name="MinButton" Style="{StaticResource IconButtonStyle}" Content="&#xE921;"
+                                ToolTip="收起为右下角悬浮球" AutomationProperties.Name="收起为悬浮球"/>
+                        <Button x:Name="CloseButton" Style="{StaticResource CloseButtonStyle}" Content="&#xE8BB;"
+                                ToolTip="收起（程序继续运行，开机自启不受影响）" AutomationProperties.Name="收起"/>
+                    </StackPanel>
+                </Grid>
+
+                <Border Grid.Row="1" Height="1" Background="#EADDC9" Margin="13,0,13,0" Opacity="0.8"/>
+
+                <Grid Grid.Row="2" Margin="10,8,10,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="106"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" CornerRadius="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="34"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="9,4,7,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="备忘" FontSize="11.8" FontWeight="SemiBold"
+                                               Foreground="{StaticResource InkBrush}"/>
+                                    <Border Background="#EADCC5" CornerRadius="6" Padding="5,1,5,1" Margin="5,0,0,0"
+                                            VerticalAlignment="Center">
+                                        <TextBlock x:Name="NoteCountText" Text="1" FontSize="8.4" FontWeight="SemiBold"
+                                                   Foreground="#8B6A43"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <ListBox x:Name="NotesList" Grid.Row="1" Style="{StaticResource NoteListStyle}"
+                                     ItemTemplate="{StaticResource NoteItemTemplate}"
+                                     AutomationProperties.Name="备忘列表"/>
+
+                            <StackPanel Grid.Row="2" Margin="7,6,7,7">
+                                <Button x:Name="NewButton" Style="{StaticResource PrimaryButtonStyle}" Height="32"
+                                        ToolTip="新建一条备忘 (Ctrl+N)" AutomationProperties.Name="新建备忘">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="9.5"
+                                                   Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="新建备忘" FontSize="10.6" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Text="更改自动保存在本机" FontSize="8" Foreground="#A2947E"
+                                           HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Column="2" Margin="2,2,1,0">
+                        <Grid x:Name="EditorPanel">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <TextBox x:Name="TitleBox" Style="{StaticResource EditorTextBoxStyle}"
+                                         FontSize="16" FontWeight="SemiBold" Background="Transparent"
+                                         BorderThickness="0" Padding="0" MinHeight="28"
+                                         VerticalContentAlignment="Center" TextWrapping="NoWrap"
+                                         AcceptsReturn="False" MaxLines="1"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                         ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                         AutomationProperties.Name="备忘标题"/>
+                                <TextBlock Text="无标题备忘" FontSize="16" FontWeight="SemiBold" Foreground="#B9AD9B"
+                                           VerticalAlignment="Center" IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=TitleBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Margin="0,3,0,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock x:Name="KindBadgeText" Text="长期·永久" FontSize="8.2"
+                                               Foreground="{StaticResource LongForeverBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text=" · " FontSize="8.2" Foreground="{StaticResource FaintBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MetaText" Text="最近编辑" FontSize="8.2"
+                                               Foreground="{StaticResource FaintBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text=" · " FontSize="8.2" Foreground="{StaticResource FaintBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="CompleteStateText" Text="未完成" FontSize="8.2"
+                                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button x:Name="DeleteButton" Style="{StaticResource IconButtonStyle}" Width="22" Height="22"
+                                        FontSize="10" Content="&#xE74D;" HorizontalAlignment="Right"
+                                        ToolTip="删除当前备忘" AutomationProperties.Name="删除当前备忘"/>
+                            </Grid>
+
+                            <Border Grid.Row="2" Height="1" Background="#EADDC9" Margin="0,6,0,8" Opacity="0.9"/>
+
+                            <Grid Grid.Row="3">
+                                <TextBox x:Name="ContentBox" Style="{StaticResource EditorTextBoxStyle}"
+                                         FontSize="12.2" Padding="0,0,3,44" Background="Transparent"
+                                         BorderThickness="0" TextWrapping="Wrap" AcceptsReturn="True"
+                                         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Disabled" UndoLimit="120"
+                                         AutomationProperties.Name="备忘内容"/>
+                                <TextBlock Text="在这里写下你的想法…" FontSize="12.2" Foreground="#BBAF9D"
+                                           Margin="1,1,0,0" VerticalAlignment="Top" IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=ContentBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button x:Name="CompleteButton" Style="{StaticResource CompleteCircleStyle}"
+                                        Width="56" Height="56" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                        Margin="0,0,4,4" RenderTransformOrigin="0.5,0.5"
+                                        ToolTip="点击打卡，标记为已完成" AutomationProperties.Name="完成打卡">
+                                    <Button.RenderTransform>
+                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                    </Button.RenderTransform>
+                                    <!-- Content lives inside the style's Viewbox (uniform scale):
+                                         icon + label stack, both always fully visible, no clipping. -->
+                                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock x:Name="CompleteButtonIcon" Text="&#x25CB;" FontSize="15" FontWeight="Bold"
+                                                   Foreground="#FFFFFF" HorizontalAlignment="Center"
+                                                   Margin="0,0,0,1" LineHeight="16"
+                                                   LineStackingStrategy="BlockLineHeight"/>
+                                        <TextBlock x:Name="CompleteButtonText" Text="待办" FontSize="12.5" FontWeight="Bold"
+                                                   Foreground="#FFFFFF" HorizontalAlignment="Center"
+                                                   LineHeight="16" LineStackingStrategy="BlockLineHeight"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Border Grid.Row="4" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
+                                    Margin="0,5,0,0" Padding="0,6,0,6">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <TextBlock x:Name="StatusIcon" Text="✓" FontSize="9.5" FontWeight="Bold"
+                                                   Foreground="#769062" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="StatusText" Text="已保存" FontSize="9"
+                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                                        <Border Width="1" Height="10" Background="#E5D8C5" Margin="8,0"/>
+                                        <TextBlock x:Name="CharCountText" Text="0 字" FontSize="8.6"
+                                                   Foreground="{StaticResource FaintBrush}" VerticalAlignment="Center"/>
+                                        <Border Width="1" Height="10" Background="#E5D8C5" Margin="8,0"/>
+                                        <Button x:Name="StatsButton" Style="{StaticResource IconButtonStyle}" Width="22" Height="22"
+                                                FontSize="10" Content="&#xE7C1;" ToolTip="任务完成统计"
+                                                AutomationProperties.Name="完成统计"/>
+                                        <Border Width="1" Height="10" Background="#E5D8C5" Margin="6,0"/>
+                                        <Button x:Name="SaveButton" Style="{StaticResource IconButtonStyle}" Width="22" Height="22"
+                                                FontSize="10" Content="&#xE74E;" ToolTip="立即保存 (Ctrl+S)"
+                                                AutomationProperties.Name="立即保存"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <Border x:Name="CreatePanel" Visibility="Collapsed" CornerRadius="12"
+                                Background="#FAF4E9" BorderBrush="#E4D5BF" BorderThickness="1" Padding="12,10">
+                            <StackPanel>
+                                <TextBlock Text="新建备忘" FontSize="13.5" FontWeight="SemiBold"
+                                           Foreground="{StaticResource InkBrush}"/>
+                                <TextBlock Text="请先选择备忘类型" FontSize="9" Foreground="{StaticResource MutedBrush}"
+                                           Margin="0,2,0,8"/>
+
+                                <TextBlock Text="类型" FontSize="8.6" Foreground="{StaticResource FaintBrush}" Margin="0,0,0,4"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="TypeShortButton" Grid.Column="0" Style="{StaticResource TypeButtonStyle}"
+                                            Height="38" AutomationProperties.Name="短期备忘">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="短期" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="24 小时失效" FontSize="7.6" Foreground="{StaticResource MutedBrush}"
+                                                       HorizontalAlignment="Center" Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="TypeLongButton" Grid.Column="2" Style="{StaticResource TypeButtonStyle}"
+                                            Height="38" AutomationProperties.Name="长期备忘">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="长期" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="永久 / 区间" FontSize="7.6" Foreground="{StaticResource MutedBrush}"
+                                                       HorizontalAlignment="Center" Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+
+                                <StackPanel x:Name="LongModePanel" Visibility="Collapsed" Margin="0,10,0,0">
+                                    <TextBlock Text="有效期" FontSize="8.6" Foreground="{StaticResource FaintBrush}" Margin="0,0,0,4"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="ModeForeverButton" Grid.Column="0" Style="{StaticResource TypeButtonStyle}"
+                                                Height="32" Content="永久保留" FontSize="10"
+                                                AutomationProperties.Name="永久保留"/>
+                                        <Button x:Name="ModeRangeButton" Grid.Column="2" Style="{StaticResource TypeButtonStyle}"
+                                                Height="32" Content="日期区间" FontSize="10"
+                                                AutomationProperties.Name="日期区间"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <StackPanel x:Name="DateRangePanel" Visibility="Collapsed" Margin="0,10,0,0">
+                                    <TextBlock Text="起始日期" FontSize="8.6" Foreground="{StaticResource FaintBrush}" Margin="0,0,0,2"/>
+                                    <DatePicker x:Name="StartDatePicker" FontSize="10.5" Height="28"
+                                                AutomationProperties.Name="起始日期"/>
+                                    <TextBlock Text="结束日期" FontSize="8.6" Foreground="{StaticResource FaintBrush}"
+                                               Margin="0,6,0,2"/>
+                                    <DatePicker x:Name="EndDatePicker" FontSize="10.5" Height="28"
+                                                AutomationProperties.Name="结束日期"/>
+                                </StackPanel>
+
+                                <TextBlock x:Name="CreateHintText" Text="" FontSize="8.2" Foreground="{StaticResource AccentBrush}"
+                                           Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="CreateCancelButton" Grid.Column="0" Style="{StaticResource CancelButtonStyle}"
+                                            Height="30" Content="取消" FontSize="10.4"
+                                            AutomationProperties.Name="取消新建"/>
+                                    <Button x:Name="CreateConfirmButton" Grid.Column="2" Style="{StaticResource ConfirmButtonStyle}"
+                                            Height="30" Content="创建" FontSize="10.4" FontWeight="SemiBold"
+                                            IsEnabled="False"
+                                            AutomationProperties.Name="确认创建"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border x:Name="StatsPanel" Visibility="Collapsed"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Margin="6,6,6,6"
+                Background="#FFFDF8" BorderBrush="#E4D5BF" BorderThickness="1" CornerRadius="14"
+                AutomationProperties.Name="完成统计面板">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.3" Color="#28190B"/>
+            </Border.Effect>
+            <Grid Margin="12,10,12,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="24" Height="24" CornerRadius="8" Background="#769062">
+                            <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                       Foreground="#FFFDF8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="任务完成统计" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{StaticResource InkBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button x:Name="StatsCloseButton" Style="{StaticResource CloseButtonStyle}"
+                            HorizontalAlignment="Right" Content="&#xE8BB;"
+                            ToolTip="关闭统计" AutomationProperties.Name="关闭统计"/>
+                </Grid>
+                <Border Grid.Row="1" Height="1" Background="#EADDC9" Margin="0,8,0,8" Opacity="0.8"/>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock x:Name="StatsContent" Text="" FontSize="10" FontFamily="Microsoft YaHei UI"
+                               Foreground="{StaticResource InkBrush}" TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Border x:Name="MenuPanel" Visibility="Collapsed" Width="196"
+                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,52,10,0"
+                Background="#FFFDF8" BorderBrush="#E4D5BF" BorderThickness="1" CornerRadius="11"
+                AutomationProperties.Name="设置菜单">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.28" Color="#28190B"/>
+            </Border.Effect>
+            <StackPanel Margin="4">
+                <Button x:Name="AutostartButton" Style="{StaticResource MenuRowStyle}"
+                        AutomationProperties.Name="开机自启动">
+                    <Grid>
+                        <TextBlock x:Name="AutostartText" Text="开机自启动" FontSize="10.4"
+                                   Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="AutostartStateText" Text="已开启" FontSize="8.6"
+                                   Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+                <Border Height="1" Background="#EEE2D0" Margin="6,3"/>
+                <Button x:Name="QuitButton" Style="{StaticResource MenuRowStyle}"
+                        AutomationProperties.Name="退出程序">
+                    <Grid>
+                        <TextBlock Text="退出程序" FontSize="10.4" Foreground="{StaticResource InkBrush}"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="9"
+                                   Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <Border x:Name="BallRoot" Width="52" Height="52" CornerRadius="26" Visibility="Collapsed"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Cursor="Hand" ToolTip="点击展开桌面备忘录（也可重新运行程序）"
+                AutomationProperties.Name="展开备忘录">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0.8,1">
+                    <GradientStop Color="#C1793A" Offset="0"/>
+                    <GradientStop Color="#A85F26" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.45" Color="#28190B"/>
+            </Border.Effect>
+            <Grid>
+                <TextBlock Text="记" FontFamily="Noto Serif SC" FontSize="18" FontWeight="SemiBold"
+                           Foreground="#FFF9EF" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Margin="0,-1,0,0"/>
+                <Ellipse Width="6" Height="6" Fill="#FFF9EF" Opacity="0.9"
+                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,12,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
